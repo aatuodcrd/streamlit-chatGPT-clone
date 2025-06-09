@@ -138,7 +138,7 @@ with upload_col1:
 
 # MongoDB connection
 mongo_uri = st.secrets["MONGO_URI"]
-mongo_client = MongoClient(mongo_uri)
+mongo_client = MongoClient(mongo_uri, serverSelectionTimeoutMS=10000)
 chat_collection = mongo_client["chat_db"]["chat_logs"]
 
 # เริ่มต้น vector_store_map
