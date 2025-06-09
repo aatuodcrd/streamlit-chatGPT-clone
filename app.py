@@ -1,103 +1,103 @@
 import streamlit as st
 import openai
 from langchain.chains.question_answering import load_qa_chain
-# from langchain_openai import OpenAIEmbeddings
-# from langchain.text_splitter import RecursiveCharacterTextSplitter
-# from langchain_community.vectorstores import FAISS
+from langchain_openai import OpenAIEmbeddings
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAI
-# import pypdf
-# import os
-# from io import BytesIO
-# import docx  # สำหรับไฟล์ .docx
-# from pptx import Presentation  # สำหรับไฟล์ .pptx
-# import pandas as pd  # สำหรับไฟล์ .xlsx
+import pypdf
+import os
+from io import BytesIO
+import docx  # สำหรับไฟล์ .docx
+from pptx import Presentation  # สำหรับไฟล์ .pptx
+import pandas as pd  # สำหรับไฟล์ .xlsx
 from langchain.memory import ConversationBufferMemory
 from pymongo import MongoClient
 import uuid
 from datetime import datetime, UTC
 
 # --- ฟังก์ชันหลักในการทำงาน ---
-# def get_text_from_file(file):
-#     """
-#     ฟังก์ชันสำหรับอ่านข้อความจากไฟล์ที่อัปโหลด (PDF, TXT, DOCX, PPTX, XLSX, CSV)
-#     """
-#     text = ""
-#     file_extension = os.path.splitext(file.name)[1]
-#     if file_extension == ".pdf":
-#         try:
-#             pdf_reader = pypdf.PdfReader(file)
-#             for page in pdf_reader.pages:
-#                 text += page.extract_text()
-#         except Exception as e:
-#             st.error(f"เกิดข้อผิดพลาดในการอ่านไฟล์ PDF: {e}")
-#             return None
-#     elif file_extension == ".txt":
-#         text = file.getvalue().decode("utf-8")
-#     elif file_extension == ".docx":
-#         try:
-#             document = docx.Document(file)
-#             for para in document.paragraphs:
-#                 text += para.text + "\n"
-#         except Exception as e:
-#             st.error(f"เกิดข้อผิดพลาดในการอ่านไฟล์ DOCX: {e}")
-#             return None
-#     elif file_extension == ".pptx":
-#         try:
-#             prs = Presentation(file)
-#             for slide in prs.slides:
-#                 for shape in slide.shapes:
-#                     if hasattr(shape, "text"):
-#                         text += shape.text + "\n"
-#         except Exception as e:
-#             st.error(f"เกิดข้อผิดพลาดในการอ่านไฟล์ PPTX: {e}")
-#             return None
-#     elif file_extension == ".xlsx":
-#         try:
-#             xls = pd.ExcelFile(file)
-#             for sheet_name in xls.sheet_names:
-#                 df = pd.read_excel(xls, sheet_name=sheet_name, header=0)
-#                 # แปลง DataFrame ทั้งหมดเป็นข้อความ
-#                 text += f"--- Sheet: {sheet_name} ---\n"
-#                 text += df.to_string(index=False) + "\n\n"
-#         except Exception as e:
-#             st.error(f"เกิดข้อผิดพลาดในการอ่านไฟล์ XLSX: {e}")
-#             return None
-#     elif file_extension == ".csv":
-#         try:
-#             df = pd.read_csv(file)
-#             text += df.to_string(index=False) + "\n"
-#         except Exception as e:
-#             st.error(f"เกิดข้อผิดพลาดในการอ่านไฟล์ CSV: {e}")
-#             return None
-#     else:
-#         st.warning("ไม่รองรับชนิดของไฟล์นี้ กรุณาอัปโหลดไฟล์ PDF, TXT, DOCX, PPTX, XLSX หรือ CSV", icon="⚠️")
-#         return None
-#     return text
+def get_text_from_file(file):
+    """
+    ฟังก์ชันสำหรับอ่านข้อความจากไฟล์ที่อัปโหลด (PDF, TXT, DOCX, PPTX, XLSX, CSV)
+    """
+    text = ""
+    file_extension = os.path.splitext(file.name)[1]
+    if file_extension == ".pdf":
+        try:
+            pdf_reader = pypdf.PdfReader(file)
+            for page in pdf_reader.pages:
+                text += page.extract_text()
+        except Exception as e:
+            st.error(f"เกิดข้อผิดพลาดในการอ่านไฟล์ PDF: {e}")
+            return None
+    elif file_extension == ".txt":
+        text = file.getvalue().decode("utf-8")
+    elif file_extension == ".docx":
+        try:
+            document = docx.Document(file)
+            for para in document.paragraphs:
+                text += para.text + "\n"
+        except Exception as e:
+            st.error(f"เกิดข้อผิดพลาดในการอ่านไฟล์ DOCX: {e}")
+            return None
+    elif file_extension == ".pptx":
+        try:
+            prs = Presentation(file)
+            for slide in prs.slides:
+                for shape in slide.shapes:
+                    if hasattr(shape, "text"):
+                        text += shape.text + "\n"
+        except Exception as e:
+            st.error(f"เกิดข้อผิดพลาดในการอ่านไฟล์ PPTX: {e}")
+            return None
+    elif file_extension == ".xlsx":
+        try:
+            xls = pd.ExcelFile(file)
+            for sheet_name in xls.sheet_names:
+                df = pd.read_excel(xls, sheet_name=sheet_name, header=0)
+                # แปลง DataFrame ทั้งหมดเป็นข้อความ
+                text += f"--- Sheet: {sheet_name} ---\n"
+                text += df.to_string(index=False) + "\n\n"
+        except Exception as e:
+            st.error(f"เกิดข้อผิดพลาดในการอ่านไฟล์ XLSX: {e}")
+            return None
+    elif file_extension == ".csv":
+        try:
+            df = pd.read_csv(file)
+            text += df.to_string(index=False) + "\n"
+        except Exception as e:
+            st.error(f"เกิดข้อผิดพลาดในการอ่านไฟล์ CSV: {e}")
+            return None
+    else:
+        st.warning("ไม่รองรับชนิดของไฟล์นี้ กรุณาอัปโหลดไฟล์ PDF, TXT, DOCX, PPTX, XLSX หรือ CSV", icon="⚠️")
+        return None
+    return text
 
-# def get_text_chunks(raw_text):
-#     """
-#     ฟังก์ชันสำหรับแบ่งข้อความยาวๆ ออกเป็นส่วนย่อย (chunks)
-#     """
-#     text_splitter = RecursiveCharacterTextSplitter(
-#         chunk_size=1000,
-#         chunk_overlap=200,
-#         length_function=len
-#     )
-#     chunks = text_splitter.split_text(raw_text)
-#     return chunks
+def get_text_chunks(raw_text):
+    """
+    ฟังก์ชันสำหรับแบ่งข้อความยาวๆ ออกเป็นส่วนย่อย (chunks)
+    """
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1000,
+        chunk_overlap=200,
+        length_function=len
+    )
+    chunks = text_splitter.split_text(raw_text)
+    return chunks
 
-# def get_vector_store(text_chunks, api_key):
-#     """
-#     ฟังก์ชันสำหรับแปลง chunks ของข้อความเป็น vector embeddings และเก็บใน FAISS vector store
-#     """
-#     try:
-#         embeddings = OpenAIEmbeddings(openai_api_key=api_key)
-#         vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
-#         return vector_store
-#     except Exception as e:
-#         st.error(f"เกิดข้อผิดพลาดระหว่างสร้าง Vector Store: {e}")
-#         st.info("อาจเกิดจาก API Key ไม่ถูกต้อง หรือปัญหาการเชื่อมต่อกับ OpenAI")
-#         return None
+def get_vector_store(text_chunks, api_key):
+    """
+    ฟังก์ชันสำหรับแปลง chunks ของข้อความเป็น vector embeddings และเก็บใน FAISS vector store
+    """
+    try:
+        embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+        vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
+        return vector_store
+    except Exception as e:
+        st.error(f"เกิดข้อผิดพลาดระหว่างสร้าง Vector Store: {e}")
+        st.info("อาจเกิดจาก API Key ไม่ถูกต้อง หรือปัญหาการเชื่อมต่อกับ OpenAI")
+        return None
 
 @st.cache_data(show_spinner=False)
 def get_available_models(api_key):
@@ -131,10 +131,10 @@ st.title("🤖 Streamlit ChatGPT Clone", help=None)
 st.caption("แชทบอทอัจฉริยะที่สามารถตอบคำถามจากไฟล์ของคุณได้")
 
 # Add upload button in a container at top right
-# upload_col1, upload_col2 = st.columns([1, 20])
-# with upload_col1:
-#     if st.button("📎", help="อัปโหลดไฟล์เพื่อถาม", use_container_width=True, key="top_upload_button"):
-#         st.session_state.show_upload_modal = True
+upload_col1, upload_col2 = st.columns([1, 20])
+with upload_col1:
+    if st.button("📎", help="อัปโหลดไฟล์เพื่อถาม", use_container_width=True, key="top_upload_button"):
+        st.session_state.show_upload_modal = True
 
 # MongoDB connection
 mongo_uri = st.secrets["MONGO_URI"]
@@ -180,7 +180,7 @@ with st.sidebar:
         )
     st.divider()
 
-    # st.info("แอปนี้จะทำงานใน 2 โหมด:\n1. **โหมดปกติ:** หากไม่ได้อัปโหลดและประมวลผลไฟล์ จะเป็นแชทบอททั่วไป\n2. **โหมด Deep Search:** หากประมวลผลไฟล์แล้ว บอทจะตอบคำถามโดยอ้างอิงจากเนื้อหาในไฟล์เป็นหลัก")
+    st.info("แอปนี้จะทำงานใน 2 โหมด:\n1. **โหมดปกติ:** หากไม่ได้อัปโหลดและประมวลผลไฟล์ จะเป็นแชทบอททั่วไป\n2. **โหมด Deep Search:** หากประมวลผลไฟล์แล้ว บอทจะตอบคำถามโดยอ้างอิงจากเนื้อหาในไฟล์เป็นหลัก")
 
     # ดึงรายชื่อ chat folders ตาม user_id (คือ openai_api_key)
     chat_folder_collection = mongo_client["chat_db"]["chat_folder"]
@@ -292,34 +292,34 @@ if "chat_name" in st.session_state and st.session_state.chat_name:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # # ปุ่มอัปโหลดไฟล์ในหน้าหลัก (modal popup)
-    # if "show_upload_modal" not in st.session_state:
-    #     st.session_state.show_upload_modal = False
+    # ปุ่มอัปโหลดไฟล์ในหน้าหลัก (modal popup)
+    if "show_upload_modal" not in st.session_state:
+        st.session_state.show_upload_modal = False
 
-    # if st.session_state.show_upload_modal:
-    #     st.markdown("### 📎 อัปโหลดไฟล์ (Deep Search Mode)")
-    #     uploaded_file_main = st.file_uploader("เลือกไฟล์", type=["pdf", "txt", "docx", "pptx", "xlsx", "csv"], key="file_uploader_main")
-    #     if uploaded_file_main is not None:
-    #         if st.button("🔍 ประมวลผลไฟล์", key="process_main_file"):
-    #             if not openai_api_key or not openai_api_key.startswith('sk-'):
-    #                 st.warning("กรุณาใส่ OpenAI API Key ที่ถูกต้องก่อนประมวลผลไฟล์", icon="🔑")
-    #             else:
-    #                 with st.spinner("กำลังประมวลผลไฟล์..."):
-    #                     raw_text = get_text_from_file(uploaded_file_main)
-    #                     if raw_text:
-    #                         text_chunks = get_text_chunks(raw_text)
-    #                         vector_store = get_vector_store(text_chunks, openai_api_key)
-    #                         if vector_store:
-    #                             st.session_state.vector_store_map[st.session_state.chat_id] = vector_store
-    #                             st.success("ประมวลผลไฟล์สำเร็จ! ตอนนี้คุณสามารถถามคำถามเกี่ยวกับไฟล์นี้ได้แล้ว")
-    #                             st.session_state.show_upload_modal = False
-    #                         else:
-    #                             st.session_state.vector_store_map.pop(st.session_state.chat_id, None)
-    #                     else:
-    #                         st.error("ไม่สามารถอ่านไฟล์ได้")
-    #                         st.session_state.vector_store_map.pop(st.session_state.chat_id, None)
-    #     if st.button("❌ ปิด", key="close_upload_popup"):
-    #         st.session_state.show_upload_modal = False
+    if st.session_state.show_upload_modal:
+        st.markdown("### 📎 อัปโหลดไฟล์ (Deep Search Mode)")
+        uploaded_file_main = st.file_uploader("เลือกไฟล์", type=["pdf", "txt", "docx", "pptx", "xlsx", "csv"], key="file_uploader_main")
+        if uploaded_file_main is not None:
+            if st.button("🔍 ประมวลผลไฟล์", key="process_main_file"):
+                if not openai_api_key or not openai_api_key.startswith('sk-'):
+                    st.warning("กรุณาใส่ OpenAI API Key ที่ถูกต้องก่อนประมวลผลไฟล์", icon="🔑")
+                else:
+                    with st.spinner("กำลังประมวลผลไฟล์..."):
+                        raw_text = get_text_from_file(uploaded_file_main)
+                        if raw_text:
+                            text_chunks = get_text_chunks(raw_text)
+                            vector_store = get_vector_store(text_chunks, openai_api_key)
+                            if vector_store:
+                                st.session_state.vector_store_map[st.session_state.chat_id] = vector_store
+                                st.success("ประมวลผลไฟล์สำเร็จ! ตอนนี้คุณสามารถถามคำถามเกี่ยวกับไฟล์นี้ได้แล้ว")
+                                st.session_state.show_upload_modal = False
+                            else:
+                                st.session_state.vector_store_map.pop(st.session_state.chat_id, None)
+                        else:
+                            st.error("ไม่สามารถอ่านไฟล์ได้")
+                            st.session_state.vector_store_map.pop(st.session_state.chat_id, None)
+        if st.button("❌ ปิด", key="close_upload_popup"):
+            st.session_state.show_upload_modal = False
 
     # --- Chat input & attach button: moved to bottom ---
     prompt = st.chat_input("ถามคำถามของคุณ...")
