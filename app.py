@@ -322,7 +322,7 @@ if "chat_name" in st.session_state and st.session_state.chat_name:
                             llm = OpenAI(model_name=selected_model, temperature=0.7, openai_api_key=openai_api_key)
                             memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
                             chain = load_qa_chain(llm=llm, chain_type="stuff", memory=memory)
-                            response = chain.run(input_documents=docs, question=prompt)
+                            response = chain.invoke({"input_documents": docs, "question": prompt})
                             st.markdown(response)
                         except Exception as e:
                             response = f"ขออภัย, เกิดข้อผิดพลาดในการค้นหาข้อมูลจากไฟล์: {e}"
