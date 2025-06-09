@@ -257,6 +257,27 @@ with st.sidebar:
                 st.session_state.messages = [{"role": "assistant", "content": "สวัสดีครับ! ผมพร้อมช่วยเหลือคุณแล้ว"}]
                 st.session_state.creating_chat = False
                 st.session_state.vector_store_map = {}
+                # --- เพิ่ม folder ใหม่เข้า MongoDB เมื่อเริ่มแชทใหม่ ---
+                user_id = openai_api_key
+                chat_folder_id = st.session_state.chat_id
+                chat_name = st.session_state.chat_name
+                system_prompt = st.session_state.system_prompt
+                chat_folder_collection.update_one(
+                    {"user_id": user_id},
+                    {
+                        "$push": {
+                            "chat_folders": {
+                                "chat_folder_id": chat_folder_id,
+                                "chat_name": chat_name,
+                                "system_prompt": system_prompt,
+                                "model": selected_model if 'selected_model' in locals() else "gpt-4.1-nano",
+                                "create_at": datetime.now(UTC).isoformat(),
+                                "last_update": datetime.now(UTC).isoformat()
+                            }
+                        }
+                    },
+                    upsert=True
+                )
                 st.rerun()
 
 # --- ส่วนของการแชท ---
